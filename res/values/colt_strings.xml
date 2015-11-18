@@ -57,4 +57,9 @@
     <string name="colt_ota_title">ColtOS Updates</string>
     <string name="colt_ota_summary">Get latest build</string>
 
+  <!-- Notification volume -->
+    <string name="link_volume_option_title">Link ring and notification volume</string>
+    <string name="notification_volume_option_title">Notification volume</string>
+    <string name="ring_notification_volume_option_title">Ring and notification volume</string>
+
 </resources>
