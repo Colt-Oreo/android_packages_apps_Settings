@@ -48,4 +48,9 @@
     <string name="doze_always_on_title">Always-on Ambient Display</string>
     <string name="doze_always_on_summary">Ambient will be on when the proximity sensor is uncovered</string>
 
+    <!-- Reset battery stats -->
+    <string name="ok">Ok</string>
+    <string name="menu_stats_reset">Reset stats</string>
+    <string name="reset_stats_msg">Battery history stats are going to be reset</string>
+
 </resources>
