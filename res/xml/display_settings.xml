@@ -92,6 +92,15 @@
         android:entries="@array/night_mode_entries"
         android:entryValues="@array/night_mode_values" /> -->
 
+    <PreferenceCategory
+        android:title="@string/theme_title">
+
+    <com.android.settings.display.ThemePreference
+        android:key="theme"
+        android:title="@string/theme" />
+    </PreferenceCategory>
+
+
     <SwitchPreference
         android:key="camera_gesture"
         android:title="@string/camera_gesture_title"

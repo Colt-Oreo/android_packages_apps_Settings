@@ -16,9 +16,23 @@
 
 package com.android.settings;
 
+import android.app.ThemeManager;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.UserHandle;
 import android.provider.SearchIndexableResource;
+import android.os.Bundle;
+import android.os.Handler;
+import android.app.Activity;
+import android.app.ActivityManager;
+import android.app.ActivityManagerNative;
+import android.content.ContentResolver;
+import android.provider.Settings.Secure;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.provider.SearchIndexableResource;
+import android.provider.Settings;
+
 
 import com.android.internal.hardware.AmbientDisplayConfiguration;
 import com.android.internal.logging.nano.MetricsProto.MetricsEvent;
@@ -41,14 +55,22 @@ import com.android.settings.display.VrDisplayPreferenceController;
 import com.android.settings.display.WallpaperPreferenceController;
 import com.android.settings.gestures.DoubleTapScreenPreferenceController;
 import com.android.settings.gestures.PickupGesturePreferenceController;
+import com.android.settings.display.ThemePreference;
 import com.android.settings.search.BaseSearchIndexProvider;
 import com.android.settings.search.Indexable;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static android.provider.Settings.Secure.CAMERA_GESTURE_DISABLED;
+import static android.provider.Settings.Secure.DOZE_ENABLED;
+import static android.provider.Settings.Secure.WAKE_GESTURE_ENABLED;
+
 public class DisplaySettings extends DashboardFragment {
+
     private static final String TAG = "DisplaySettings";
+
+    public static final String FILE_FONT_WARING = "font_waring";
 
     public static final String KEY_DISPLAY_SIZE = "screen_zoom";
 
@@ -56,6 +78,11 @@ public class DisplaySettings extends DashboardFragment {
     private static final String KEY_SCREEN_TIMEOUT = "screen_timeout";
     private static final String KEY_PICK_UP = "gesture_pick_up_display_summary";
     private static final String KEY_DOUBLE_TAP_SCREEN = "gesture_double_tap_screen_display_summary";
+    private static final String KEY_THEME = "theme";
+
+    private ThemePreference mThemePreference;
+    private SharedPreferences mSharedPreferences;
+    private SharedPreferences.Editor mEditor;
 
     @Override
     public int getMetricsCategory() {
@@ -76,6 +103,36 @@ public class DisplaySettings extends DashboardFragment {
     @Override
     protected int getPreferenceScreenResId() {
         return R.xml.display_settings;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        final Activity activity = getActivity();
+        final ContentResolver resolver = activity.getContentResolver();
+
+        addPreferencesFromResource(R.xml.display_settings);
+
+        mSharedPreferences = getContext().getSharedPreferences(FILE_FONT_WARING,
+                Activity.MODE_PRIVATE);
+        mEditor = mSharedPreferences.edit();
+
+	mThemePreference = (ThemePreference) findPreference(KEY_THEME);
+        if (mThemePreference != null) {
+            final int accentColorValue = Settings.Secure.getInt(getContext().getContentResolver(),
+                    Settings.Secure.THEME_ACCENT_COLOR, 1);
+            final int primaryColorValue = Settings.Secure.getInt(getContext().getContentResolver(),
+                    Settings.Secure.THEME_PRIMARY_COLOR, 2);
+            mThemePreference.setSummary(PreviewSeekBarPreferenceFragment.getInfoText(getContext(),
+                    false, accentColorValue, primaryColorValue) + ", " +
+                    PreviewSeekBarPreferenceFragment.getInfoText(getContext(), true,
+                    accentColorValue, primaryColorValue));
+            if (ThemeManager.isOverlayEnabled()) {
+                mThemePreference.setEnabled(false);
+                mThemePreference.setSummary(R.string.oms_enabled);
+            }
+       }
+
     }
 
     @Override

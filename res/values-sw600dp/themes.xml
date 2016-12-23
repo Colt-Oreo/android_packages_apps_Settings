@@ -16,7 +16,7 @@
   ~ limitations under the License
   -->
 <resources>
-    <style name="Theme.ConfirmDeviceCredentials" parent="Theme.SubSettings">
+    <style name="Theme.ConfirmDeviceCredentials" parent="Theme_SubSettings">
       <item name="confirmDeviceCredentialsSideMargin">@dimen/confirm_credentials_side_margin</item>
       <item name="confirmDeviceCredentialsTopMargin">@dimen/confirm_credentials_top_margin</item>
     </style>
