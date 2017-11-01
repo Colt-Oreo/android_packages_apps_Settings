@@ -43,6 +43,9 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Resources;
 import android.hardware.usb.IUsbManager;
 import android.hardware.usb.UsbManager;
+import android.net.NetworkUtils;
+import android.net.wifi.IWifiManager;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.BatteryManager;
@@ -98,6 +101,8 @@ import com.android.settingslib.RestrictedLockUtils.EnforcedAdmin;
 import com.android.settingslib.RestrictedSwitchPreference;
 import com.android.settingslib.drawer.CategoryKey;
 
+import lineageos.providers.LineageSettings;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -122,6 +127,7 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
     public static final String PREF_SHOW = "show";
 
     private static final String ENABLE_ADB = "enable_adb";
+    private static final String ADB_TCPIP = "adb_over_network";
     private static final String CLEAR_ADB_KEYS = "clear_adb_keys";
     private static final String ENABLE_TERMINAL = "enable_terminal";
     private static final String KEEP_SCREEN_ON = "keep_screen_on";
@@ -232,6 +238,10 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
 
     private static final String KEY_CONVERT_FBE = "convert_to_file_encryption";
 
+    private static final String OTA_DISABLE_AUTOMATIC_UPDATE_KEY = "ota_disable_automatic_update";
+
+    private static final String DEVELOPMENT_TOOLS = "development_tools";
+
     private static final int RESULT_DEBUG_APP = 1000;
     private static final int RESULT_MOCK_LOCATION_APP = 1001;
 
@@ -260,6 +270,7 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
     private boolean mOtaDisabledOnce = false;
 
     private SwitchPreference mEnableAdb;
+    private SwitchPreference mAdbOverNetwork;
     private Preference mClearAdbKeys;
     private SwitchPreference mEnableTerminal;
     private RestrictedSwitchPreference mKeepScreenOn;
@@ -336,6 +347,8 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
 
     private SwitchPreference mColorTemperaturePreference;
 
+    private PreferenceScreen mDevelopmentTools;
+
     private final ArrayList<Preference> mAllPrefs = new ArrayList<Preference>();
 
     private final ArrayList<SwitchPreference> mResetSwitchPrefs
@@ -347,6 +360,7 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
     private Dialog mEnableDialog;
     private Dialog mAdbDialog;
 
+    private Dialog mAdbTcpDialog;
     private Dialog mAdbKeysDialog;
     private boolean mUnavailable;
 
@@ -407,6 +421,7 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
         final PreferenceGroup debugDebuggingCategory = (PreferenceGroup)
                 findPreference(DEBUG_DEBUGGING_CATEGORY_KEY);
         mEnableAdb = findAndInitSwitchPref(ENABLE_ADB);
+        mAdbOverNetwork = findAndInitSwitchPref(ADB_TCPIP);
         mClearAdbKeys = findPreference(CLEAR_ADB_KEYS);
         if (!SystemProperties.getBoolean("ro.adb.secure", false)) {
             if (debugDebuggingCategory != null) {
@@ -548,6 +563,12 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
             removePreference(KEY_CONVERT_FBE);
         }
 
+//        mOtaDisableAutomaticUpdate = findAndInitSwitchPref(OTA_DISABLE_AUTOMATIC_UPDATE_KEY);
+//        if (!SystemProperties.getBoolean("ro.build.ab_update", false)) {
+//            removePreference(mOtaDisableAutomaticUpdate);
+//            mOtaDisableAutomaticUpdate = null;
+//        }
+
         mColorModePreference = (ColorModePreference) findPreference(KEY_COLOR_MODE);
         mColorModePreference.updateCurrentAndSupported();
         if (mColorModePreference.getColorModeCount() < 2) {
@@ -581,6 +602,9 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
                 Settings.Secure.BUGREPORT_IN_POWER_MENU, 0) == 1) {
             Settings.Secure.putInt(cr, Settings.Secure.BUGREPORT_IN_POWER_MENU, 0);
         }
+
+        mDevelopmentTools = (PreferenceScreen) findPreference(DEVELOPMENT_TOOLS);
+        mAllPrefs.add(mDevelopmentTools);
 
         addDashboardCategoryPreferences();
     }
@@ -807,6 +831,10 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
         updateShowAllANRsOptions();
         updateShowNotificationChannelWarningsOptions();
         mVerifyAppsOverUsbController.updatePreference();
+//        if (mOtaDisableAutomaticUpdate != null) {
+//            updateOtaDisableAutomaticUpdateOptions();
+//        }
+//        updateBugreportOptions();
         updateForceRtlOptions();
         updateLogdSizeValues();
         updateLogpersistValues();
@@ -827,6 +855,35 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
         updateBluetoothDisableAbsVolumeOptions();
         updateBluetoothEnableInbandRingingOptions();
         updateBluetoothA2dpConfigurationValues();
+        updateAdbOverNetwork();
+    }
+
+    private void updateAdbOverNetwork() {
+        int port = LineageSettings.Secure.getInt(getActivity().getContentResolver(),
+                LineageSettings.Secure.ADB_PORT, 0);
+        boolean enabled = port > 0;
+
+        updateSwitchPreference(mAdbOverNetwork, enabled);
+
+        WifiInfo wifiInfo = null;
+
+        if (enabled) {
+            IWifiManager wifiManager = IWifiManager.Stub.asInterface(
+                    ServiceManager.getService(Context.WIFI_SERVICE));
+            try {
+                wifiInfo = wifiManager.getConnectionInfo();
+            } catch (RemoteException e) {
+                Log.e(TAG, "wifiManager, getConnectionInfo()", e);
+            }
+        }
+
+        if (wifiInfo != null) {
+            String hostAddress = NetworkUtils.intToInetAddress(
+                    wifiInfo.getIpAddress()).getHostAddress();
+            mAdbOverNetwork.setSummary(hostAddress + ":" + String.valueOf(port));
+        } else {
+            mAdbOverNetwork.setSummary(R.string.adb_over_network_summary);
+        }
     }
 
     private void resetDangerousOptions() {
@@ -839,6 +896,7 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
             }
         }
         resetDebuggerOptions();
+        resetAdbNotifyOptions();
         writeLogpersistOption(null, true);
         writeLogdSizeOption(null);
         writeAnimationScaleOption(0, mWindowAnimationScale, null);
@@ -854,6 +912,11 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
         updateAllOptions();
         mDontPokeProperties = false;
         pokeSystemProperties();
+    }
+
+    private void resetAdbNotifyOptions() {
+        LineageSettings.Secure.putInt(getActivity().getContentResolver(),
+                LineageSettings.Secure.ADB_NOTIFY, 1);
     }
 
     private void updateHdcpValues() {
@@ -2395,6 +2458,23 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
                         Settings.Global.ADB_ENABLED, 0);
                 mVerifyAppsOverUsbController.updatePreference();
             }
+        } else if (preference == mAdbOverNetwork) {
+            if (mAdbOverNetwork.isChecked()) {
+                if (mAdbTcpDialog != null) {
+                    dismissDialogs();
+                }
+                mAdbTcpDialog = new AlertDialog.Builder(getActivity()).setMessage(
+                        getResources().getString(R.string.adb_over_network_warning))
+                        .setTitle(R.string.adb_over_network)
+                        .setPositiveButton(android.R.string.yes, this)
+                        .setNegativeButton(android.R.string.no, this)
+                        .show();
+                mAdbTcpDialog.setOnDismissListener(this);
+            } else {
+                LineageSettings.Secure.putInt(getActivity().getContentResolver(),
+                        LineageSettings.Secure.ADB_PORT, -1);
+                updateAdbOverNetwork();
+            }
         } else if (preference == mClearAdbKeys) {
             if (mAdbKeysDialog != null) dismissDialogs();
             mAdbKeysDialog = new AlertDialog.Builder(getActivity())
@@ -2581,6 +2661,10 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
             mLogpersistClearDialog.dismiss();
             mLogpersistClearDialog = null;
         }
+        if (mAdbTcpDialog != null) {
+            mAdbTcpDialog.dismiss();
+            mAdbTcpDialog = null;
+        }
     }
 
     public void onClick(DialogInterface dialog, int which) {
@@ -2619,6 +2703,11 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
             } else {
                 updateLogpersistValues();
             }
+        } else if (dialog == mAdbTcpDialog) {
+            if (which == DialogInterface.BUTTON_POSITIVE) {
+                LineageSettings.Secure.putInt(getActivity().getContentResolver(),
+                        LineageSettings.Secure.ADB_PORT, 5555);
+            }
         }
     }
 
@@ -2636,6 +2725,9 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
             mEnableDialog = null;
         } else if (dialog == mLogpersistClearDialog) {
             mLogpersistClearDialog = null;
+        } else if (dialog == mAdbTcpDialog) {
+            updateAdbOverNetwork();
+            mAdbTcpDialog = null;
         }
     }
 
