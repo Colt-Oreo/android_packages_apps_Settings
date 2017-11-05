@@ -64,7 +64,7 @@ public class ColtVersionPreferenceController extends PreferenceController
         super.displayPreference(screen);
         final Preference pref = screen.findPreference(KEY_COLT_VERSION);
         if (pref != null) {
-            pref.setSummary(android.os.Build.COLT_DISPLAY_VERSION);
+            pref.setSummary(android.os.Build.COLT_VERSION);
             pref.setEnabled(true);
         }
     }
