@@ -53,4 +53,8 @@
     <string name="menu_stats_reset">Reset stats</string>
     <string name="reset_stats_msg">Battery history stats are going to be reset</string>
 
+    <!-- ColtOS OTA -->
+    <string name="colt_ota_title">ColtOS Updates</string>
+    <string name="colt_ota_summary">Get latest build</string>
+
 </resources>
