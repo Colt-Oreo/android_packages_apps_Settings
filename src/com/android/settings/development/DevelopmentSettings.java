@@ -592,7 +592,7 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
             So, to be sure the automatic update function is really kept disabled, we are forcing it to disabled
             (it means we are enabling the "disable automatic ota" feature) at least once in the onCreate method.*/
         final ContentResolver cr = getActivity().getContentResolver();
-        if (!mOtaDisabledOnce && 
+        if (!mOtaDisabledOnce &&
                 (Settings.Global.getInt(cr, Settings.Global.OTA_DISABLE_AUTOMATIC_UPDATE, 0) != 1)) {
             Settings.Global.putInt(cr, Settings.Global.OTA_DISABLE_AUTOMATIC_UPDATE, 1);
             mOtaDisabledOnce = true;
@@ -2457,6 +2457,23 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
                 Settings.Global.putInt(getActivity().getContentResolver(),
                         Settings.Global.ADB_ENABLED, 0);
                 mVerifyAppsOverUsbController.updatePreference();
+            }
+        } else if (preference == mAdbOverNetwork) {
+            if (mAdbOverNetwork.isChecked()) {
+                if (mAdbTcpDialog != null) {
+                    dismissDialogs();
+                }
+                mAdbTcpDialog = new AlertDialog.Builder(getActivity()).setMessage(
+                        getResources().getString(R.string.adb_over_network_warning))
+                        .setTitle(R.string.adb_over_network)
+                        .setPositiveButton(android.R.string.yes, this)
+                        .setNegativeButton(android.R.string.no, this)
+                        .show();
+                mAdbTcpDialog.setOnDismissListener(this);
+            } else {
+                LineageSettings.Secure.putInt(getActivity().getContentResolver(),
+                        LineageSettings.Secure.ADB_PORT, -1);
+                updateAdbOverNetwork();
             }
         } else if (preference == mAdbOverNetwork) {
             if (mAdbOverNetwork.isChecked()) {
