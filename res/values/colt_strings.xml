@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-     Copyright (C) 2017 ColtOS
+<!-- Copyright (C) 2017 ColtOS
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
      You may obtain a copy of the License at
@@ -34,4 +33,10 @@
     <!-- Dummy string needed to hide SuperSU from launcher, no need to translate -->
     <string name="supersu_title">SuperSU</string>
 
+<!-- Themes -->
+     <string name="system_theme_style_title">UI style</string>
+     <string name="system_theme_style_auto">Wallpaper based</string>
+     <string name="system_theme_style_light">Light UI</string>
+     <string name="system_theme_style_dark">Dark UI</string>
+ 
 </resources>
