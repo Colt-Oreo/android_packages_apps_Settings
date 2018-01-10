@@ -12,6 +12,16 @@
      limitations under the License.
 -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-        <string name="colt_name_title">ColtOS A Learners Hub</string>
-        <string name="colt_name_summary">Colt Oreo -More Than A Custom ROM - 2.0</string>
+
+    <string name="colt_name_title">ColtOS A Learners Hub</string>
+    <string name="colt_name_summary">Colt Oreo -More Than A Custom ROM - 2.1</string>
+
+    <!-- Colt Center -->
+    <string name="colt_settings_title">Colt Interiors</string>
+    <string name="colt_settings_summary">Open Colts Lobby :)</string>
+
+    <!-- About phone screen, Colt version -->
+    <string name="colt_version">Colt Version</string>
+    <string name="colt_version_default">ColtOS-Oreo-Cookie-2.1</string>
+
 </resources>
